@@ -298,7 +298,11 @@ impl LeakDetector {
         self.scan_and_clean(url)?;
 
         // Scan each header value
+        // Skip Authorization header — it intentionally contains injected credentials
         for (name, value) in headers {
+            if name.to_lowercase() == "authorization" {
+                continue;
+            }
             self.scan_and_clean(value)
                 .map_err(|e| LeakDetectionError::SecretLeakBlocked {
                     pattern: format!("header:{}", name),
