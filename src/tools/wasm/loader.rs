@@ -140,6 +140,16 @@ impl WasmToolLoader {
             (Capabilities::default(), None)
         };
 
+        // Load schema from .schema.json if present
+        let schema_path = wasm_path.with_extension("schema.json");
+        let schema = if schema_path.exists() {
+            let schema_bytes = fs::read(&schema_path).await?;
+            serde_json::from_slice(&schema_bytes).unwrap_or(serde_json::Value::Null)
+        } else {
+            serde_json::Value::Null
+        };
+        let schema = if schema.is_null() { None } else { Some(schema) };
+
         // Register the tool
         self.registry
             .register_wasm(WasmToolRegistration {
@@ -149,7 +159,7 @@ impl WasmToolLoader {
                 capabilities,
                 limits: None,
                 description: None,
-                schema: None,
+                schema,
                 secrets_store: self.secrets_store.clone(),
                 oauth_refresh,
             })

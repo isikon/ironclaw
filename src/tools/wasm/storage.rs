@@ -131,6 +131,7 @@ pub struct StoredCapabilities {
     pub max_response_body_bytes: i64,
     pub workspace_read_prefixes: Vec<String>,
     pub http_timeout_secs: i32,
+    pub allow_http: bool,
 }
 
 impl StoredCapabilities {
@@ -155,6 +156,7 @@ impl StoredCapabilities {
                 max_request_bytes: self.max_request_body_bytes as usize,
                 max_response_bytes: self.max_response_body_bytes as usize,
                 timeout: std::time::Duration::from_secs(self.http_timeout_secs as u64),
+                allow_http: self.allow_http,
             });
         }
 
@@ -466,6 +468,7 @@ impl WasmToolStore for PostgresWasmToolStore {
                     max_response_body_bytes: r.get("max_response_body_bytes"),
                     workspace_read_prefixes: r.get("workspace_read_prefixes"),
                     http_timeout_secs: r.get("http_timeout_secs"),
+                    allow_http: r.get::<_, Option<bool>>("allow_http").unwrap_or(false),
                 }))
             }
             None => Ok(None),
@@ -837,6 +840,7 @@ impl WasmToolStore for LibSqlWasmToolStore {
                     max_response_body_bytes: max_resp,
                     workspace_read_prefixes,
                     http_timeout_secs: timeout as i32,
+                    allow_http: false,
                 }))
             }
             None => Ok(None),
