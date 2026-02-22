@@ -202,8 +202,11 @@ impl McpClient {
 
             // Check for 401 Unauthorized - try to refresh token on first attempt
             if response.status() == reqwest::StatusCode::UNAUTHORIZED {
-                if attempt == 0 {
-                    // Try to refresh the token
+                let is_static_token = self.server_config.as_ref()
+                    .map(|c| c.static_token.is_some())
+                    .unwrap_or(false);
+                if attempt == 0 && !is_static_token {
+                    // Try to refresh the token (only for OAuth, not static tokens)
                     if let Some(ref secrets) = self.secrets
                         && let Some(ref config) = self.server_config
                     {

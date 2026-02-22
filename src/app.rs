@@ -506,6 +506,25 @@ impl AppBuilder {
 
                                 join_set.spawn(async move {
                                     let server_name = server.name.clone();
+
+                                    // Store static_token in secrets if configured
+                                    if let Some(ref token) = server.static_token {
+                                        let secret_name = server.token_secret_name();
+                                        tracing::info!(
+                                            "Storing static token for MCP server '{}' as '{}'",
+                                            server_name, secret_name
+                                        );
+                                        let params = crate::secrets::CreateSecretParams::new(
+                                            &secret_name,
+                                            token,
+                                        ).with_provider(format!("mcp:{}", server_name));
+                                        // Try create, fall back to update if exists
+                                        match secrets.create("default", params).await {
+                                            Ok(_) => tracing::info!("Static token stored for '{}'", server_name),
+                                            Err(e) => tracing::warn!("Failed to store static token for '{}': {}", server_name, e),
+                                        }
+                                    }
+
                                     let has_tokens =
                                         is_authenticated(&server, &secrets, "default").await;
 

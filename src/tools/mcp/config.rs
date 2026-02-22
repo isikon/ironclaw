@@ -24,6 +24,11 @@ pub struct McpServerConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub oauth: Option<OAuthConfig>,
 
+    /// Static Bearer token (alternative to OAuth, e.g. Home Assistant long-lived tokens).
+    /// Token is stored in the secrets store on startup under token_secret_name().
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub static_token: Option<String>,
+
     /// Whether this server is enabled.
     #[serde(default = "default_true")]
     pub enabled: bool,
@@ -44,6 +49,7 @@ impl McpServerConfig {
             name: name.into(),
             url: url.into(),
             oauth: None,
+            static_token: None,
             enabled: true,
             description: None,
         }
@@ -92,7 +98,7 @@ impl McpServerConfig {
     /// Returns true if OAuth is pre-configured OR if this is a remote HTTPS server
     /// (which likely supports Dynamic Client Registration even without pre-configured OAuth).
     pub fn requires_auth(&self) -> bool {
-        if self.oauth.is_some() {
+        if self.oauth.is_some() || self.static_token.is_some() {
             return true;
         }
         // Remote HTTPS servers need auth handling (DCR, token refresh, 401 detection).
