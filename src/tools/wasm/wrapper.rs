@@ -317,7 +317,14 @@ impl near::agent::host::Host for StoreData {
             .unwrap_or(10 * 1024 * 1024);
 
         // Resolve hostname and reject private/internal IPs to prevent DNS rebinding.
-        reject_private_ip(&url)?;
+        // Exception: if the host is explicitly in the tool's allowlist, skip the check.
+        // This allows tools to intentionally target local services (e.g. internal proxies).
+        let allowlisted_explicitly = self.host_state.capabilities().http.as_ref()
+            .map(|h| h.allowlist.iter().any(|e| url.contains(&e.host)))
+            .unwrap_or(false);
+        if !allowlisted_explicitly {
+            reject_private_ip(&url)?;
+        }
 
         // Make HTTP request using a dedicated single-threaded runtime.
         // We're inside spawn_blocking, so we can't rely on the main runtime's

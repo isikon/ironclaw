@@ -1,0 +1,19 @@
+{
+  "http": {
+    "allowlist": [
+      {
+        "host": "127.0.0.1:8025",
+        "path_prefix": "/send",
+        "methods": ["POST"]
+      }
+    ],
+    "rate_limit": {
+      "requests_per_minute": 10,
+      "requests_per_hour": 100
+    },
+    "timeout_secs": 30
+  },
+  "secrets": {
+    "allowed_names": []
+  }
+}
